@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroSwift</title>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.31/build/spline-viewer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .hero {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        spline-viewer {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1; /* Make it the background */
+        }
+
+        h1 {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3em;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        section {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .section-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #333;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .dashboard, .ar-tool {
+            background-color: #e0e7ff;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 10px;
+        }
+
+        /* New Real-Time Monitoring Section */
+        .monitoring-section {
+            background-color: #222;
+            color: white;
+            padding: 60px 20px;
+            position: relative;
+        }
+
+        .charts {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+        }
+
+        .chart {
+            width: 45%;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .chart h2 {
+            color: black;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .warning {
+            color: red;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Video Chat Styles */
+        .video-chat {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .video-chat video {
+            width: 500px;  /* Increased width */
+            height: 300px; /* Increased height */
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 5px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3); /* Added shadow for depth */
+        }
+
+        .video-chat .label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            margin-left: 20px;
+        }
+
+        .chat-window {
+            border: 1px solid #ddd;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .chat-input {
+            margin-top: 10px;
+            display: flex;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .chat-input button {
+            padding: 10px;
+            border: none;
+            background-color: #0077ff;
+            color: white;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #005bb5;
+        }
+
+        /* Flexbox layout for chart and table */
+        .dashboard-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px; /* Spacing between chart and table */
+        }
+
+        /* Styling for the table */
+        .table-container {
+            width: 100%; /* Adjusted for full-width responsiveness */
+            max-width: 800px; /* Max width for larger screens */
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto; /* Allows horizontal scrolling if needed */
+        }
+
+        .repair-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .repair-table th, .repair-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            transition: background-color 0.3s; /* Smooth transition for hover */
+        }
+
+        .repair-table th {
+            background-color: #4caf50; /* Header background */
+            color: white; /* Header text color */
+            font-family: 'Orbitron', sans-serif;
+            text-align: center; /* Center align header text */
+        }
+
+        .repair-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .repair-table tbody tr:hover {
+            background-color: #f1f1f1; /* Change background on hover */
+        }
+
+    </style>
+</head>
+<body>
+<div class="hero">
+    <h1>AeroSwift</h1>
+    <spline-viewer url="https://prod.spline.design/bVQCZ6lYBOwn9GJa/scene.splinecode"></spline-viewer>
+</div>
+
+<!-- Real-Time System Monitoring Section -->
+<section class="monitoring-section" id="system-monitoring">
+    <div class="section-title">Real-Time System Monitoring</div>
+    
+    <!-- Charts (Chart.js) -->
+    <div class="charts">
+        <div class="chart">
+            <h2>Hardware Quality</h2>
+            <canvas id="hardware"></canvas>
+        </div>
+        <div class="chart">
+            <h2>Hardware Temperature Monitoring</h2>
+            <canvas id="temperatureChart"></canvas>
+            <div id="warning" class="warning"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Real-Time Dashboard Section -->
+<section id="dashboard" class="dashboard">
+    <div class="section-title">Real-Time Repair Dashboard</div>
+    <div class="section-content">
+        <div class="dashboard-content">
+            <!-- Chart for Repair Task Distribution -->
+            <div class="chart-container">
+                <h2>Repair Task Distribution</h2>
+                <canvas id="repairTasksChart"></canvas>
+            </div>
+            
+            <!-- Table Repair Tasks -->
+            <div class="table-container">
+                <h2>Repair Tasks</h2>
+                <table class="repair-table">
+                    <thead>
+                        <tr>
+                            <th>Keyspace</th>
+                            <th>Table</th>
+                            <th>Status</th>
+                            <th>Total Attempts</th>
+                            <th>Repair Type</th>
+                            <th>Average Repair Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>keyspace3</td>
+                            <td>table3</td>
+                            <td>In Progress</td>
+                            <td>50</td>
+                            <td>Electrical</td>
+                            <td>10 hours</td>
+                        </tr>
+                        <tr>
+                            <td>keyspace1</td>
+                            <td>table1</td>
+                            <td>Completed</td>
+                            <td>75</td>
+                            <td>Mechanical</td>
+                            <td>8 hours</td>
+                        </tr>
+                        <tr>
+                            <td>keyspace2</td>
+                            <td>table2</td>
+                            <td>Pending</td>
+                            <td>30</td>
+                            <td>Electrical</td>
+                            <td>12 hours</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Detection Camera Section -->
+<section class="ai-detection" id="ai-detection">
+    <div class="section-title">AI Detection Camera</div>
+    <div class="section-content">
+        <p>Real-time AI detection system scans the aviation equipment to identify and highlight potential issues.</p>
+        <div class="camera-feed">
+            <video id="detectionCamera" autoplay muted></video>
+            <div id="aiOverlay" class="overlay">Scanning...</div>
+        </div>
+        <button id="startScan" style="background-color: #0077ff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Start AI Scan</button>
+        <button id="stopScan" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Stop AI Scan</button>
+    </div>
+</section>
+
+<!-- AI Chatbot Section -->
+<section class="ai-chatbot" id="ai-chatbot">
+    <div class="section-title">AI Assistant</div>
+    <div class="section-content">
+        <p>Chat with AeroSwift's AI Assistant for quick diagnostics, repair suggestions, and FAQ responses.</p>
+        <div class="chatbot-container">
+            <div class="chatbot-window" id="chatbotWindow"></div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Ask a question...">
+                <button id="chatbotSendButton">Send</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Video Chat Section -->
+<section id="mobile-team" class="mobile-team">
+    <div class="section-title">Mobile AOG Repair Teams</div>
+    <div class="section-content">
+        <div class="video-chat">
+            <div class="video-frame">
+                <video id="localVideo" autoplay muted></video>
+                <div class="label">Expert</div>
+            </div>
+            <div class="video-frame">
+                <video id="remoteVideo" autoplay></video>
+                <div class="label">Technician</div>
+            </div>
+        </div>
+        <div class="chat-container">
+            <div class="chat-window" id="chatWindow"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your message...">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+        <div class="video-controls">
+            <button id="startButton" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Start Video Conferencing</button>
+            <button id="endButton" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">End Video Conferencing</button>
+        </div>
+        <!-- File Sharing System -->
+        <div class="file-sharing">
+            <input type="file" id="fileInput">
+            <button id="sendFileButton" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Send File</button>
+            <div id="fileList"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // JavaScript code to handle Chart.js setup
+    const hardwareCtx = document.getElementById('hardware').getContext('2d');
+    const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
+    const repairTasksCtx = document.getElementById('repairTasksChart').getContext('2d');
+
+    // Hardware Quality Chart
+    const hardwareChart = new Chart(hardwareCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Component A', 'Component B', 'Component C'],
+            datasets: [{
+                label: 'Quality Score',
+                data: [85, 90, 75],
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Hardware Temperature Monitoring Chart
+    const temperatureChart = new Chart(temperatureCtx, {
+        type: 'line',
+        data: {
+            labels: ['0h', '1h', '2h', '3h', '4h'],
+            datasets: [{
+                label: 'Temperature (°C)',
+                data: [22, 24, 23, 25, 27],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 30
+                }
+            },
+            animation: {
+                onComplete: function() {
+                    const latestTemp = this.data.datasets[0].data.slice(-1)[0];
+                    const warningDiv = document.getElementById('warning');
+                    if (latestTemp > 25) {
+                        warningDiv.textContent = 'Warning: High Temperature!';
+                        warningDiv.style.color = 'red';
+                    } else {
+                        warningDiv.textContent = '';
+                    }
+                }
+            }
+        }
+    });
+
+    // Repair Task Distribution Chart
+    const repairTasksChart = new Chart(repairTasksCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Electrical', 'Mechanical', 'Structural'],
+            datasets: [{
+                label: 'Repair Tasks',
+                data: [60, 30, 10],
+                backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(255, 206, 86, 0.6)'],
+            }]
+        },
+        options: {
+            responsive: true,
+        }
+    });
+
+    // Video Chat Functionality
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const startButton = document.getElementById('startButton');
+    const endButton = document.getElementById('endButton');
+    let localStream;
+
+    startButton.addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                localVideo.srcObject = stream;
+                // Simulate remote video stream
+                remoteVideo.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+            });
+    });
+
+    endButton.addEventListener('click', () => {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localVideo.srcObject = null;
+            remoteVideo.srcObject = null;
+        }
+    });
+
+    // Chat Functionality
+    const chatWindow = document.getElementById('chatWindow');
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendButton');
+
+    sendButton.addEventListener('click', () => {
+        const message = chatInput.value;
+        if (message.trim() !== '') {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            chatWindow.appendChild(messageElement);
+            chatInput.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
+        }
+    });
+</script>
+
+<style>
+    .video-frame {
+        position: relative;
+        display: inline-block;
+        margin: 10px;
+    }
+
+    .video-frame video {
+        width: 500px;  /* Increased width */
+        height: 300px; /* Increased height */
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        margin: 5px;
+        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3); /* Added shadow for depth */
+    }
+
+    .video-frame .label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 1em;
+    }
+</style>
+</body>
+</html>
